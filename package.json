@@ -1,0 +1,29 @@
+{
+  "name": "practice",
+  "version": "1.0.0",
+  "description": "practising",
+  "main": "app.js",
+  "scripts": {
+    "test": "test",
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "na"
+  },
+  "keywords": [
+    "na"
+  ],
+  "author": "pooja",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "apn": "^2.1.5",
+    "body-parser": "^1.17.2",
+    "js-tree": "^1.1.0",
+    "lodash": "^4.17.4",
+    "mongodb": "^2.2.31",
+    "nodemon": "^1.11.0",
+    "route": "^0.2.5",
+    "shortid": "^2.2.8"
+  }
+}
