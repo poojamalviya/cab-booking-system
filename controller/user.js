@@ -9,8 +9,8 @@ var express = require('express'),
 	bodyParser = require('body-parser');
 
 router.post('/register', function (req, res) {
-	console.log(req.body, "000000")
-	res.send("plzzjjjjjjjjjzzzz");
+
+	res.send("");
 });
 // function test(req, res) {
 // 	console.log(req.body)

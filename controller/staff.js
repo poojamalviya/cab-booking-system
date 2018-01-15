@@ -47,7 +47,7 @@ router.post('/drop_points', function (req, res) {
 router.get('/route_plan', function (req, res) {
 	return new Promise(function (resolve, reject) {
 		console.log(req.body, "000000")
-		res.send("plzzjjjjjjjjjzzzz");
+		res.send("");
 	})
 });
 
