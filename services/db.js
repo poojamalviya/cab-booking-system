@@ -1,7 +1,7 @@
 var mongo = require('mongodb').MongoClient,
 	error = require('./error'),
 	_ = require('lodash'),
-	url = 'mongodb://localhost:27017/cabTarget';
+	url = 'mongodb://localhost:27017/cabAllocation';
 
 
 var db = module.exports = {
@@ -11,70 +11,55 @@ var db = module.exports = {
 	findOne: findOne
 };
 
-function insertOne(modelName, data, res) {
-	return new Promise(function (resolve, reject) {
-		mongo.connect(url, function (err, db) {
-			if (err) {
-				return reject(error.sendError("dbConnection", res, err));
-			}
-			db.collection(modelName).insertOne(data, function (result) {
 
-				return resolve(res.send(data));
+function dbConnection() {
+	return new Promise(function (resolve, reject) {
+		mongo.connect(url)
+			.then(function (db) {
+				resolve(db);
+			}).catch(function (err) {
+				return reject(err);
 			})
+	})
+}
+
+function insertOne(modelName, data) {
+	return new Promise(function (resolve, reject) {
+		dbConnection().then(function (db) {
+			return db.collection(modelName).insertOne(data);
+		}).then(function (res) {
+			resolve(res.ops);
 		})
 	});
 };
 
-function insertMany(modelName, data, res) {
+function insertMany(modelName, data) {
 	return new Promise(function (resolve, reject) {
-		mongo.connect(url, function (err, db) {
-			if (err) {
-				return reject(error.sendError("dbConnection", res, err));
-			}
-			db.collection(modelName).insertMany(data, function (err, result) {
-				if (err){
-					return reject(err);
-				}
-				return resolve(data);
-			})
+		dbConnection().then(function (db) {
+			return db.collection(modelName).insertMany(data);
+		}).then(function (res) {
+			resolve(res.ops);
 		})
 	});
 };
 
 
-function findAll(modelName, res) {
+function findAll(modelName) {
 	return new Promise(function (resolve, reject) {
-		mongo.connect(url, function (err, db) {
-			if (err) {
-				return reject(error.sendError("dbConnection", res, err));
-			}
-			db.collection(modelName).find().toArray(function (err, result) {
-				if (err) {
-					return reject(error.sendError("dbError", res, err));
-				}
-				return resolve(res.send(result));
-			})
-		}).catch(function (err) {
-			return reject(err);
+		dbConnection().then(function (db) {
+			return db.collection(modelName).find().toArray();
+		}).then(function (res) {
+			resolve(res);
 		})
-	});
+	})
 };
-
 
 function findOne(modelName, params, res) {
 	return new Promise(function (resolve, reject) {
-		mongo.connect(url, function (err, db) {
-			if (err) {
-				return reject(error.sendError("dbConnection", res, err));
-			}
-			db.collection(modelName).findOne(params, function (err, result) {
-				if (err) {
-					return reject(error.sendError("dbError", res, err));
-				}
-				return resolve(res.send(result));
-			})
-		}).catch(function (err) {
-			return reject(err);
+		dbConnection().then(function (db) {
+			return b.collection(modelName).findOne(params);
+		}).then(function (res) {
+			resolve(res);
 		})
 	});
 };
