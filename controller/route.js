@@ -98,61 +98,37 @@ function allocate() {
     })
 }
 */
-
 allocate();
 function allocate() {
-    return new Promise(function (resolve, reject) {
-        var route = [];
-        var routeObj = {};
-        var i = 0;
-        var bool = false;
-        db.findAll("User").then(function (users) {
+    var route = [];
+    var routeObj = {};
+    var sameDrop = groupBy(users, cab)
+    var i = 0;
+    var length = sameDrop.pointC.length 
+    if (sameDrop.pointC.length << 1) {
+        var teammemberid = [];
+        var path = ["target_headquarter"];
+        _.each(sameDrop.pointC, function (obj) {
+            teammemberid.push(obj.team_member_id)
+            path.push(obj.drop_point);
+            var isLastItem = obj.team_member_id == sameDrop.pointC[length - 1].team_member_id
+            if (teammemberid.length == cab[i].capacity ||(teammemberid.length < cab[i].capacity && isLastItem)) {
+                routeObj = {
+                    "cab_id": cab[i].id,
+                    "team_member_ids": teammemberid,
+                    "route": _.uniq(path),
+                }
 
-            var sameDrop = groupBy(users, cab)
-            if (sameDrop.pointC.length << 1) {
-                var teammemberid = [];
-                var path = ["target_headquarter"];
-                _.each(sameDrop.pointC, function (obj) {
-         
-                    console.log(teammemberid.length, cab[i].capacity)
-                    if (teammemberid.length == cab[i].capacity) {
-                      
-                        routeObj = {
-                            "cab_id": cab[i].id,
-                            "team_member_ids": teammemberid,
-                            "route": _.uniq(path),
-                            // "route_cost": 
-                        }
-                       return  route.push(routeObj);
-                        i = i++;
-                    }
-                    obj["cabStatus"] = "booked";
-                    teammemberid.push(obj["team_member_id"])
-                    path.push(obj["drop_point"]);
-                })
-
-                // console.log(i, "imiiiiiii", bool)
-                // routeObj = {
-                //     "cab_id": cab[i].id,
-                //     "team_member_ids": teammemberid,
-                //     "route": _.uniq(path),
-                //     // "route_cost": 
-                // }
-                // if (bool = true); {
-
-                //     i = i++;
-                //     bool = false;
-                // }
+                route.push(routeObj);
+                teammemberid = [];
+                i++;
             }
-            return (route);
-        }).then(function (hh) {
-            console.log(hh, "+++++")
 
-            console.log(routeObj, "xx")
+            obj["cabStatus"] = "booked";
         })
-    })
+    }
+    console.log(route)
 }
-
 
 module.exports = router;
 /*{
