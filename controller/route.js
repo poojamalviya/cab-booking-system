@@ -117,13 +117,13 @@ function allocate() {
                     console.log(teammemberid.length, cab[i].capacity)
                     if (teammemberid.length == cab[i].capacity) {
                       
-                        routeObj[i] = {
+                        routeObj = {
                             "cab_id": cab[i].id,
                             "team_member_ids": teammemberid,
                             "route": _.uniq(path),
                             // "route_cost": 
                         }
-                        route.push(routeObj);
+                       return  route.push(routeObj);
                         i = i++;
                     }
                     obj["cabStatus"] = "booked";
