@@ -34,6 +34,7 @@ var droppoint = {
     "pointD": "2,2,2,0,1",
     "pointE": "2,9,6,7,0"
 };
+/*
 var users = [
 
     {
@@ -78,6 +79,7 @@ var users = [
     }
 
 ]
+
 var cab = [{
     "id": "cab1",
     "cost": 2,
@@ -93,16 +95,24 @@ var cab = [{
     "cost": 1,
     "capacity": 3
 }]
+*/
 
 
-function groupBy(users) {
-    sameDrop = _.groupBy(users, 'drop_point');
-    var allUser = [];
-    _.forOwn(sameDrop, function (value, key) {
-        allUser.push(value);
-    })
-
-    return (_.flatten(allUser));
+function groupBy() {
+    return new Promise(function (resolve, reject) {
+        db.findAll("User").then(function (users) {
+            sameDrop = _.groupBy(users, 'drop_point');
+            var allUser = [];
+            _.forOwn(sameDrop, function (value, key) {
+                allUser.push(value);
+            })
+            return (allUser);
+        }).then(function (allUser) {
+            return resolve(_.flatten(allUser));
+        }).catch(function (err) {
+            return reject(err);
+        })
+    });
 }
 /*
 function allocate() {
@@ -141,42 +151,46 @@ function allocate() {
     return new Promise(function (resolve, reject) {
         var route = [];
         var routeObj = {};
-        var allUser = groupBy(users);
+        var allUser = [];
         var i = 0;
-        db.findAll("User").then(function (users) {
+        groupBy().then(function (_allUser) {
+            allUser = _allUser;
+
+            return db.findAll("Cabs");
+        }).then(function (cabs) {
             var length = allUser.length;
-            if (length << 1) {
-                var teammemberid = [];
-                var path = ["target_headquarter"];
-                _.each(allUser, function (obj) {
-                    teammemberid.push(obj.team_member_id)
-                    path.push(obj.drop_point);
-                    var isLastItem = obj.team_member_id == allUser[length - 1].team_member_id
-                    if (cab[i].capacity == undefined) {
-                        return reject(error.sendError("badRequest", res, "not enough cabs to allocate users"));
-                    }
-                    if (teammemberid.length == cab[i].capacity || (teammemberid.length < cab[i].capacity && isLastItem)) {
-                        routeObj = {
-                            "cab_id": cab[i].id,
-                            "team_member_ids": teammemberid,
-                            "route": _.uniq(path),
-                        }
-                        obj["cabStatus"] = "booked";
-
-                        route.push(routeObj);
-                        teammemberid = [];
-                        i++;
-                    }
-
-                    obj["cabStatus"] = "booked";
-                })
+            if (allUser.length == 0) {
+                return ("there are no user!");
             }
+            var teammemberid = [];
+            var path = ["target_headquarter"];
+            _.each(allUser, function (obj) {
+                teammemberid.push(obj.team_member_id)
+                path.push(obj.drop_point);
+                var isLastItem = obj.team_member_id == allUser[length - 1].team_member_id
+                if (cab[i].capacity == undefined) {
+                    return reject("not enough cabs");
+                }
+                if (teammemberid.length == cab[i].capacity || (teammemberid.length < cab[i].capacity && isLastItem)) {
+                    routeObj = {
+                        "cab_id": cab[i].id,
+                        "team_member_ids": teammemberid,
+                        "route": _.uniq(path),
+                    }
+                    obj["cabStatus"] = "booked";
+
+                    route.push(routeObj);
+                    teammemberid = [];
+                    path = ["target_headquarter"];
+                    i++;
+                }
+
+                obj["cabStatus"] = "booked";
+            })
             return (sameDrop);
         }).then(function (res) {
             console.log(route)
         })
-
-
     })
 
 }
