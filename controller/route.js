@@ -7,96 +7,24 @@ var express = require('express'),
     id = require('shortid'),
     router = express.Router();
 
-
-
-var routes = [];
 router.get('/route_plan', function (req, res) {
     return new Promise(function (resolve, reject) {
-        var users;
-        db.findAll("User").then(function (users) {
-            console.log(users)
-            //------for loopppp------
-            return resolve(users);
-        }).then(function () {
+        db.findAll("Route").then(function (allRoutes) {
+            if (allRoutes.length == 0) {
+                return reject(error.sendError("badRequest", res, "no routes found"));
+            }
+            var total_cost = _.sum(allRoutes.route_cost);
+            var result = {
+                "total_cost": total_cost,
+                "routes": allRoutes
+            };
 
-        }).then(function () {
-            return resolve(res.send(users));
+            return resolve(result);
+        }).catch(function (err) {
+            return reject(err)
         })
-    });
+    })
 })
-
-
-var droppoint = {
-    "target_headquarter": "1,8,1,2,1",
-    "pointA": "0,1,2,1,2",
-    "pointB": "8,0,1,3,1",
-    "pointC": "7,9,0,1,1",
-    "pointD": "2,2,2,0,1",
-    "pointE": "2,9,6,7,0"
-};
-/*
-var users = [
-
-    {
-        "team_member_id": "1",
-        "gender": "M",
-        "drop_point": "pointC",
-        "_id": "1"
-    },
-    {
-        "team_member_id": "2",
-        "gender": "M",
-        "drop_point": "pointC",
-        "_id": "2"
-    }, {
-        "team_member_id": "3",
-        "gender": "M",
-        "drop_point": "pointC",
-        "_id": "3"
-    },
-    {
-        "team_member_id": "4",
-        "gender": "M",
-        "drop_point": "pointA",
-        "_id": "4"
-    },
-    {
-        "team_member_id": "5",
-        "gender": "M",
-        "drop_point": "pointA",
-        "_id": "5"
-    }, {
-        "team_member_id": "6",
-        "gender": "M",
-        "drop_point": "pointA",
-        "_id": "6"
-    },
-    {
-        "team_member_id": "7",
-        "gender": "M",
-        "drop_point": "pointM",
-        "_id": "7"
-    }
-
-]
-
-var cab = [{
-    "id": "cab1",
-    "cost": 2,
-    "capacity": 2
-},
-{
-    "id": "cab2",
-    "cost": 1,
-    "capacity": 3
-},
-{
-    "id": "cab3",
-    "cost": 1,
-    "capacity": 3
-}]
-*/
-
 
 function groupBy() {
     return new Promise(function (resolve, reject) {
@@ -114,39 +42,8 @@ function groupBy() {
         })
     });
 }
-/*
-function allocate() {
-    return new Promise(function (resolve, reject) {
 
-        var route = [];
-        var routeObj = {};
-        var sameDrop = groupBy(users, cab)
-        if (sameDrop.pointC.length << 1) {
-
-            var teammemberid = [];
-            var path = ["target_headquarter"];
-
-            _.each(sameDrop.pointC, function (obj) {
-                console.log(obj, "++")
-                console.log(obj["team_member_id"], "--")
-                teammemberid.push(obj["team_member_id"])
-                path.push(obj["drop_point"]);
-
-            })
-            
-
-            routeObj = {
-                "cab_id": cab[0].id,
-                "team_member_ids": teammemberid,
-                "route": _.uniq(path),
-                // "route_cost": 
-            }
-        }
-        console.log(routeObj, "xx")
-    })
-}
-*/
-allocate();
+//allocate();
 function allocate() {
     return new Promise(function (resolve, reject) {
         var route = [];
@@ -155,9 +52,9 @@ function allocate() {
         var i = 0;
         groupBy().then(function (_allUser) {
             allUser = _allUser;
-
             return db.findAll("Cabs");
-        }).then(function (cabs) {
+        }).then(function (_cab) {
+            var cab = _.orderBy(_cab, ['capacity'], ['desc']);
             var length = allUser.length;
             if (allUser.length == 0) {
                 return ("there are no user!");
@@ -166,6 +63,13 @@ function allocate() {
             var path = ["target_headquarter"];
             _.each(allUser, function (obj) {
                 teammemberid.push(obj.team_member_id)
+                var currentCapacity = cab[i].capacity;
+                if (obj.gender == "F") {
+                    console.log(obj.gender == "F")
+                    console.log(cab[i].capacity)
+                    currentCapacity = cab[i].capacity - 1;
+                    console.log(cab[i].capacity)
+                }
                 path.push(obj.drop_point);
                 var isLastItem = obj.team_member_id == allUser[length - 1].team_member_id
                 if (cab[i].capacity == undefined) {
@@ -184,7 +88,6 @@ function allocate() {
                     path = ["target_headquarter"];
                     i++;
                 }
-
                 obj["cabStatus"] = "booked";
             })
             return (sameDrop);
@@ -195,8 +98,13 @@ function allocate() {
 
 }
 
+function bestRoute(array) {
+    //get the best route
+}
+
 module.exports = router;
-/*{
+/*
+{
     "total_cost": "5",
     "routes": [
       {
@@ -213,4 +121,48 @@ module.exports = router;
       }
     ]
    }
-   */
+  
+var droppoint = {
+    "target_headquarter": "1,8,1,2,1",
+    "pointA": "0,1,2,1,2",
+    "pointB": "8,0,1,3,1",
+    "pointC": "7,9,0,1,1",
+    "pointD": "2,2,2,0,1",
+    "pointE": "2,9,6,7,0"
+};
+
+var users = [ { _id: '1',
+    team_member_id: '1',
+    gender: 'M',
+    drop_point: 'pointC' },
+  { _id: '2',
+    team_member_id: '2',
+    gender: 'M',
+    drop_point: 'pointC' },
+  { _id: '4',
+    team_member_id: '4',
+    gender: 'M',
+    drop_point: 'pointC' },
+  { _id: '3',
+    team_member_id: '3',
+    gender: 'F',
+    drop_point: 'pointA' },
+  { _id: '5',
+    team_member_id: '5',
+    gender: 'F',
+    drop_point: 'pointD' },
+  { _id: '6',
+    team_member_id: '6',
+    gender: 'F',
+    drop_point: 'pointD' } ]
+
+var cab = [ { _id: 'cab2', id: 'cab2', cost: 1, capacity: 3 },
+  { _id: 'cab4', id: 'cab4', cost: 1, capacity: 3 },
+  { _id: 'cab6', id: 'cab6', cost: 1, capacity: 3 },
+  { _id: 'cab1', id: 'cab1', cost: 2, capacity: 2 },
+  { _id: 'cab3', id: 'cab3', cost: 2, capacity: 2 },
+  { _id: 'cab5', id: 'cab5', cost: 2, capacity: 2 } ] 
+*/
+
+
+
