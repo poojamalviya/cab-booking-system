@@ -7,6 +7,11 @@ var express = require('express'),
 	id = require('shortid'),
 	router = express.Router();
 
+/**
+* post ==>> /cabs
+* adds cabs details in db
+* returns promise of the inserted data
+*/
 router.post('/cabs', function (req, res) {
 	return new Promise(function (resolve, reject) {
 		if (!req.body) {
@@ -25,6 +30,11 @@ router.post('/cabs', function (req, res) {
 	});
 });
 
+/**
+ * post ==>> /drop_points
+ * add drop point to the db
+ * returns promise of the inserted data
+ */
 router.post('/drop_points', function (req, res) {
 	return new Promise(function (resolve, reject) {
 		if (!req.body) {

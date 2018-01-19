@@ -1,8 +1,5 @@
 var express = require('express'),
-	Promise = require('bluebird'),
 	app = express(),
-	_ = require('lodash'),
-	// error = require('./error'),
 	staff = require('./controller/staff'),
 	user = require('./controller/user'),
 	route = require('./controller/route'),

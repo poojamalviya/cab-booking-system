@@ -11,7 +11,9 @@ var db = module.exports = {
 	findOne: findOne
 };
 
-
+/**
+ * connection to mongodb
+ */
 function dbConnection() {
 	return new Promise(function (resolve, reject) {
 		mongo.connect(url)
@@ -23,6 +25,12 @@ function dbConnection() {
 	})
 }
 
+/**
+ * function insertOne ==>> insert one object
+ * @param {string} modelName ==>> collection name  where data needs to be inserted
+ * @param {object} data ==>> object to be inserted
+ * return promise for inserted data
+ */
 function insertOne(modelName, data) {
 	return new Promise(function (resolve, reject) {
 		dbConnection().then(function (db) {
@@ -33,6 +41,12 @@ function insertOne(modelName, data) {
 	});
 };
 
+/**
+ * function insertMany ==>> insert objects in single call in array
+ * @param {string} modelName ==>> collection name  where data needs to be inserted
+ * @param {array} data ==>> array of objects to be inserted
+ * return promise for inserted data
+ */
 function insertMany(modelName, data) {
 	return new Promise(function (resolve, reject) {
 		dbConnection().then(function (db) {
@@ -43,7 +57,11 @@ function insertMany(modelName, data) {
 	});
 };
 
-
+/**
+ * function findAll ==>> get the data of particular collection
+ * @param {string} modelName ==>> collection name from where user need data
+ * return promise of data in array
+ */
 function findAll(modelName) {
 	return new Promise(function (resolve, reject) {
 		dbConnection().then(function (db) {
@@ -54,10 +72,16 @@ function findAll(modelName) {
 	})
 };
 
-function findOne(modelName, params, res) {
+/**
+ * function findOne ==>> get one particular object from db
+ * @param {string} modelName ==>> collection name from where user need data
+ * @param {string} params ==>> search parameter to get particular data
+ * return promise of data in object
+ */
+function findOne(modelName, params) {
 	return new Promise(function (resolve, reject) {
 		dbConnection().then(function (db) {
-			return b.collection(modelName).findOne(params);
+			return db.collection(modelName).findOne(params);
 		}).then(function (res) {
 			resolve(res);
 		})

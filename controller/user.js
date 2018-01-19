@@ -1,16 +1,19 @@
 var express = require('express'),
 	Promise = require('bluebird'),
-	app = express(),
 	_ = require('lodash'),
 	error = require('../services/error'),
-	db = require('../services/db');
-
-router = express.Router(),
+	db = require('../services/db'),
+	router = express.Router(),
 	bodyParser = require('body-parser');
 
+/**
+ * post ==>> /register
+ * user post details which is inserted in db
+ * return promise of inserted data
+ */
 router.post('/register', function (req, res) {
 	return new Promise(function (resolve, reject) {
-		if (!req.body || !req.body.team_member_id || req.body.gender || req.body.drop_point) {
+		if (!req.body || !req.body.team_member_id || !req.body.gender || !req.body.drop_point) {
 			return reject(error.sendError("badRequest", res, "user information is required"));
 		}
 		db.findAll("DropPoint").then(function (drops) {

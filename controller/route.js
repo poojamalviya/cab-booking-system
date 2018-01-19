@@ -3,10 +3,16 @@ var express = require('express'),
     _ = require('lodash'),
     error = require('../services/error'),
     db = require('../services/db'),
-    bodyParser = require('body-parser'),
     id = require('shortid'),
     router = express.Router();
 
+
+/**
+ * get - /route_plan ==>> get the route plan as array of route plan and total cost
+ * @param  {object} req
+ * @param  {object} res 
+ * returns promise with the object 
+ */
 router.get('/route_plan', function (req, res) {
     return new Promise(function (resolve, reject) {
         db.findAll("Route").then(function (allRoutes) {
@@ -18,14 +24,17 @@ router.get('/route_plan', function (req, res) {
                 "total_cost": total_cost,
                 "routes": allRoutes
             };
-
-            return resolve(result);
+            return resolve(res.status(200).send(result));
         }).catch(function (err) {
             return reject(err)
         })
     })
 })
 
+/**
+ * groupBy get all the users and 
+ * group them according to their drop points
+ */
 function groupBy() {
     return new Promise(function (resolve, reject) {
         db.findAll("User").then(function (users) {
@@ -43,9 +52,16 @@ function groupBy() {
     });
 }
 
-allocate();
-function allocate() {
+
+/**
+ * get - /allocate
+ * @param  {object} req
+ * @param  {object} res
+ * returns promise with the array of route plan and total cost
+ */
+router.get('/allocate', function (req, res) {
     return new Promise(function (resolve, reject) {
+        console.log("here")
         var routes = [];
         var routeObj = {};
         var allUser = [];
@@ -53,7 +69,6 @@ function allocate() {
         var i = 0;
         db.findAll("DropPoint").then(function (drop) {
             dropPoint = drop;
-            console.log(drop, "drop")
             return groupBy();
         }).then(function (_allUser) {
             allUser = _allUser;
@@ -62,7 +77,7 @@ function allocate() {
             var cab = _.orderBy(_cab, ['capacity'], ['desc']);
             var length = allUser.length;
             if (allUser.length == 0) {
-                return reject("there are no user!");
+                return reject(error.sendError("badRequest", res, "there are no user"));
             }
             var teammemberid = [];
             var path = ["target_headquarter"];
@@ -71,18 +86,17 @@ function allocate() {
                 path.push(obj.drop_point);
                 var isLastItem = obj.team_member_id == allUser[length - 1].team_member_id
                 if (cab[i].capacity == undefined) {
-                    return reject("not enough cabs");
+                    return reject(error.sendError("badRequest", res, "there are not enough cabs"));
                 }
                 if (teammemberid.length == cab[i].capacity || (teammemberid.length < cab[i].capacity && isLastItem)) {
                     var routeCost = routeDistance(path, dropPoint);
-                    var bestRoutePath = bestRoute(path);
+                    var bestRoutePath = bestRoute(path, dropPoint);
                     routeObj = {
                         "cab_id": cab[i].id,
                         "team_member_ids": teammemberid,
                         "route": bestRoutePath,
                         "route_cost": _.sum(routeCost) * cab[i].cost
                     };
-                    console.log(routeObj, "routeObj")
                     routes.push(routeObj);
                     teammemberid = [];
                     path = ["target_headquarter"];
@@ -92,26 +106,25 @@ function allocate() {
             })
             return (sameDrop);
         }).then(function (res) {
-            console.log(routes)
+            return db.insertMany('Route', routes);
+        }).then(function (response) {
+            return resolve(res.status(200).send("cabs are successfully allocated"));
         }).catch(function (err) {
             return reject(err);
         })
     });
-}
+})
 
-//routeDistance(["target_headquarter", "pointB", "pointC", "pointA"]) 
-function routeDistance(_path, drop) { // add one more param
-    path = _.uniq(_path);
-    console.log(drop, "====")
-    // var drop = [{
-    //     _id: 'Skcdl804f',
-    //     target_headquarter: [1, 8, 1, 2, 1],
-    //     pointA: [0, 1, 2, 1, 2],
-    //     pointB: [8, 0, 1, 3, 1],
-    //     pointC: [7, 9, 0, 1, 1],
-    //     pointD: [2, 2, 2, 0, 1],
-    //     pointE: [2, 9, 6, 7, 0]
-    // }];
+/**
+ * function routeDistance ==> check for the drop point and 
+ * get distances from different points
+ * @param {array} _path ==>> path for the particular cab
+ * @param {array} drop ==>> array of the drop point distance
+ * return array of distances for the route
+ */
+function routeDistance(_path, drop) {
+    var path = _.uniq(_path);
+
     var map = {
         "pointA": 0,
         "pointB": 1,
@@ -131,13 +144,17 @@ function routeDistance(_path, drop) { // add one more param
     return (distance);
 }
 
-
-//bestRoute(["target_headquarter", "pointB", "pointA", "pointD"])
-
-function bestRoute(path) {
+/**
+ * function bestRoute ==>> sort the drop point according to distance and 
+ * provice the best route plan
+ * @param {array} path ==>> path for the particular cab
+ * @param {array} drop ==>> array of the drop point distance
+ * return array of drop poins for the route
+ */
+function bestRoute(path, drop) {
     var bestRoute = [];
     tempObj = {};
-    var tempArr = routeDistance(path);
+    var tempArr = routeDistance(path, drop);
     for (i = 0; i <= tempArr.length - 1; i++) {
         tempObj[path[i + 1]] = tempArr[i];
     }
@@ -153,56 +170,4 @@ module.exports = router;
 
 
 
-/*
-{
-"total_cost": "5",
-"routes": [
-  {
-    "cab_id": "cab1",
-    "team_member_ids": "4,5",
-    "route": "target_headquarter,pointE",
-    "route_cost": 2
-  },
-  {
-    "cab_id": "cab2",
-    "team_member_ids": "3,2,1",
-    "route": "target_headquarter,pointA,pointB,pointC",
-    "route_cost": 3
-  }
-]
-}
 
-
-
-var users = [ { _id: '1',
-team_member_id: '1',
-gender: 'M',
-drop_point: 'pointC' },
-{ _id: '2',
-team_member_id: '2',
-gender: 'F',
-drop_point: 'pointC' },
-{ _id: '4',
-team_member_id: '4',
-gender: 'M',
-drop_point: 'pointC' },
-{ _id: '3',
-team_member_id: '3',
-gender: 'M',
-drop_point: 'pointA' },
-{ _id: '5',
-team_member_id: '5',
-gender: 'F',
-drop_point: 'pointD' },
-{ _id: '6',
-team_member_id: '6',
-gender: 'M',
-drop_point: 'pointD' } ]
-
-var cab = [ { _id: 'cab2', id: 'cab2', cost: 1, capacity: 3 },
-{ _id: 'cab4', id: 'cab4', cost: 1, capacity: 3 },
-{ _id: 'cab6', id: 'cab6', cost: 1, capacity: 3 },
-{ _id: 'cab1', id: 'cab1', cost: 2, capacity: 2 },
-{ _id: 'cab3', id: 'cab3', cost: 2, capacity: 2 },
-{ _id: 'cab5', id: 'cab5', cost: 2, capacity: 2 } ] 
-*/
