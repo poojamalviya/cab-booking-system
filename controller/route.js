@@ -43,14 +43,19 @@ function groupBy() {
     });
 }
 
-//allocate();
+allocate();
 function allocate() {
     return new Promise(function (resolve, reject) {
         var routes = [];
         var routeObj = {};
         var allUser = [];
+        var dropPoint;
         var i = 0;
-        groupBy().then(function (_allUser) {
+        db.findAll("DropPoint").then(function (drop) {
+            dropPoint = drop;
+            console.log(drop, "drop")
+            return groupBy();
+        }).then(function (_allUser) {
             allUser = _allUser;
             return db.findAll("Cabs");
         }).then(function (_cab) {
@@ -69,15 +74,15 @@ function allocate() {
                     return reject("not enough cabs");
                 }
                 if (teammemberid.length == cab[i].capacity || (teammemberid.length < cab[i].capacity && isLastItem)) {
-                    var routeCost = routeDistance(path);
+                    var routeCost = routeDistance(path, dropPoint);
                     var bestRoutePath = bestRoute(path);
                     routeObj = {
                         "cab_id": cab[i].id,
                         "team_member_ids": teammemberid,
                         "route": bestRoutePath,
-                        "route_cost": _.sum(routeCost) // *cab  cost
+                        "route_cost": _.sum(routeCost) * cab[i].cost
                     };
-
+                    console.log(routeObj, "routeObj")
                     routes.push(routeObj);
                     teammemberid = [];
                     path = ["target_headquarter"];
@@ -93,27 +98,20 @@ function allocate() {
         })
     });
 }
-/*
 
-target_headquarter: [ 1, 8, 1, 2, 1 ],
-pointA: [ 0, 1, 2, 1, 2 ],
-pointB: [ 8, 0, 1, 3, 1 ],
-pointC: [ 7, 9, 0, 1, 1 ],
-pointD: [ 2, 2, 2, 0, 1 ],
-pointE: [ 2, 9, 6, 7, 0 ] } 
-*/
 //routeDistance(["target_headquarter", "pointB", "pointC", "pointA"]) 
-function routeDistance(_path) {
+function routeDistance(_path, drop) { // add one more param
     path = _.uniq(_path);
-    var drops = [{
-        _id: 'Skcdl804f',
-        target_headquarter: [1, 8, 1, 2, 1],
-        pointA: [0, 1, 2, 1, 2],
-        pointB: [8, 0, 1, 3, 1],
-        pointC: [7, 9, 0, 1, 1],
-        pointD: [2, 2, 2, 0, 1],
-        pointE: [2, 9, 6, 7, 0]
-    }];
+    console.log(drop, "====")
+    // var drop = [{
+    //     _id: 'Skcdl804f',
+    //     target_headquarter: [1, 8, 1, 2, 1],
+    //     pointA: [0, 1, 2, 1, 2],
+    //     pointB: [8, 0, 1, 3, 1],
+    //     pointC: [7, 9, 0, 1, 1],
+    //     pointD: [2, 2, 2, 0, 1],
+    //     pointE: [2, 9, 6, 7, 0]
+    // }];
     var map = {
         "pointA": 0,
         "pointB": 1,
@@ -124,10 +122,9 @@ function routeDistance(_path) {
     var distance = [];
     for (i = 0; i <= path.length - 2; i++) {
         var curr = path[i];
-        var checkArr = drops[0][curr];
+        var checkArr = drop[0][curr];
         var to = path[i + 1]
-        var kk = to;
-        var temp = map[kk];
+        var temp = map[to];
         var dis = checkArr[temp];
         distance.push(dis);
     }
@@ -138,7 +135,7 @@ function routeDistance(_path) {
 //bestRoute(["target_headquarter", "pointB", "pointA", "pointD"])
 
 function bestRoute(path) {
-    var bestRoute = ["target_headquarter"];
+    var bestRoute = [];
     tempObj = {};
     var tempArr = routeDistance(path);
     for (i = 0; i <= tempArr.length - 1; i++) {
@@ -147,11 +144,15 @@ function bestRoute(path) {
     _.forOwn(tempObj, function (value, key) {
         bestRoute.push(key)
     });
-    bestRoute = Object.keys(tempObj).sort((a, b) => tempObj[a] - tempObj[b])
+    bestRoute = Object.keys(tempObj).sort((a, b) => tempObj[a] - tempObj[b]);
+    bestRoute.unshift("target_headquarter")
     return (bestRoute);
 }
 
 module.exports = router;
+
+
+
 /*
 {
 "total_cost": "5",

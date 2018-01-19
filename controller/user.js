@@ -10,7 +10,7 @@ router = express.Router(),
 
 router.post('/register', function (req, res) {
 	return new Promise(function (resolve, reject) {
-		if (!req.body) {
+		if (!req.body || !req.body.team_member_id || req.body.gender || req.body.drop_point) {
 			return reject(error.sendError("badRequest", res, "user information is required"));
 		}
 		db.findAll("DropPoint").then(function (drops) {
