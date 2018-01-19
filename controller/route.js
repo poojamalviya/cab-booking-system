@@ -43,7 +43,7 @@ function groupBy() {
     });
 }
 
-allocate();
+//allocate();
 function allocate() {
     return new Promise(function (resolve, reject) {
         var routes = [];
@@ -104,7 +104,6 @@ pointE: [ 2, 9, 6, 7, 0 ] }
 */
 //routeDistance(["target_headquarter", "pointB", "pointC", "pointA"]) 
 function routeDistance(_path) {
-    //console.log(_path,"_path")
     path = _.uniq(_path);
     var drops = [{
         _id: 'Skcdl804f',
@@ -136,18 +135,19 @@ function routeDistance(_path) {
 }
 
 
-//bestRoute(["target_headquarter", "pointB", "pointC", "pointA"])
+//bestRoute(["target_headquarter", "pointB", "pointA", "pointD"])
 
 function bestRoute(path) {
     var bestRoute = ["target_headquarter"];
     tempObj = {};
     var tempArr = routeDistance(path);
     for (i = 0; i <= tempArr.length - 1; i++) {
-        tempObj[tempArr[i]] = path[i + 1];
+        tempObj[path[i + 1]] = tempArr[i];
     }
     _.forOwn(tempObj, function (value, key) {
-        bestRoute.push(value)
+        bestRoute.push(key)
     });
+    bestRoute = Object.keys(tempObj).sort((a, b) => tempObj[a] - tempObj[b])
     return (bestRoute);
 }
 
