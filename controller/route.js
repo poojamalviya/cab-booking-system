@@ -61,7 +61,6 @@ function groupBy() {
  */
 router.get('/allocate', function (req, res) {
     return new Promise(function (resolve, reject) {
-        console.log("here")
         var routes = [];
         var routeObj = {};
         var allUser = [];
@@ -89,13 +88,13 @@ router.get('/allocate', function (req, res) {
                     return reject(error.sendError("badRequest", res, "there are not enough cabs"));
                 }
                 if (teammemberid.length == cab[i].capacity || (teammemberid.length < cab[i].capacity && isLastItem)) {
-                    var routeCost = routeDistance(path, dropPoint);
+                    var cost = routeCost(path, dropPoint);
                     var bestRoutePath = bestRoute(path, dropPoint);
                     routeObj = {
                         "cab_id": cab[i].id,
                         "team_member_ids": teammemberid,
                         "route": bestRoutePath,
-                        "route_cost": _.sum(routeCost) * cab[i].cost
+                        "route_cost": _.sum(cost) * cab[i].cost
                     };
                     routes.push(routeObj);
                     teammemberid = [];
@@ -164,6 +163,12 @@ function bestRoute(path, drop) {
     bestRoute = Object.keys(tempObj).sort((a, b) => tempObj[a] - tempObj[b]);
     bestRoute.unshift("target_headquarter")
     return (bestRoute);
+}
+
+function routeCost(path, drop){
+    var bestPath = bestRoute(path, drop);
+    var cost = routeDistance(bestPath, drop);
+    return (cost);
 }
 
 module.exports = router;
