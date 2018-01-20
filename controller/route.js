@@ -165,6 +165,12 @@ function bestRoute(path, drop) {
     return (bestRoute);
 }
 
+/**
+ * function ==>> gets the route cost of best route 
+ * @param {array} path ==>> path for the particular cab
+ * @param {array} drop ==>> array of the drop point distance
+ * return array of the distance of routes
+ */
 function routeCost(path, drop){
     var bestPath = bestRoute(path, drop);
     var cost = routeDistance(bestPath, drop);
