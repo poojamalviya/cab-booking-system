@@ -21,7 +21,7 @@ allocate cabs to the users once all data is posted in the db
 ## GET /routeplan
 gives the route plan with total cost
 
-## used cases:
+## use cases:
 All team members should be dropped to their drop points.
 The generated route_plan should have minimum total_cost.
 
